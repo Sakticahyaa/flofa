@@ -1,0 +1,181 @@
+import React, { useState } from 'react';
+import { ChevronUp, ChevronDown, MoreVertical, Heart } from 'lucide-react';
+import { Animal } from '../types/Animal';
+
+interface AnimalTableProps {
+  animals: Animal[];
+  loading: boolean;
+  error: string | null;
+  onAnimalClick: (animal: Animal) => void;
+}
+
+export default function AnimalTable({ animals, loading, error, onAnimalClick }: AnimalTableProps) {
+  const [sortOrder, setSortOrder] = useState({ field: '', direction: 'asc' });
+
+  const sortedAnimals = React.useMemo(() => {
+    if (!sortOrder.field || !animals) return animals;
+    
+    return [...animals].sort((a, b) => {
+      const aValue = a[sortOrder.field as keyof Animal];
+      const bValue = b[sortOrder.field as keyof Animal];
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (sortOrder.direction === 'asc') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      }
+      return 0;
+    });
+  }, [animals, sortOrder]);
+
+  const handleSort = (field: string) => {
+    const newDirection = sortOrder.field === field && sortOrder.direction === 'asc' ? 'desc' : 'asc';
+    setSortOrder({ field, direction: newDirection });
+  };
+
+  const SortButton = ({ field }: { field: string }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className="ml-2 inline-flex flex-col items-center justify-center h-4 w-4 text-gray-400 hover:text-gray-600"
+    >
+      <ChevronUp
+        className={`w-3 h-3 ${sortOrder.field === field && sortOrder.direction === 'asc' ? 'text-gray-700' : 'text-gray-400'}`}
+      />
+      <ChevronDown
+        className={`w-3 h-3 ${sortOrder.field === field && sortOrder.direction === 'desc' ? 'text-gray-700' : 'text-gray-400'}`}
+      />
+    </button>
+  );
+
+  return (
+    <div className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-green-200/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+      <div className="overflow-x-auto">
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            <span className="ml-3 text-green-600">Loading animals...</span>
+          </div>
+        )}
+        
+        {error && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-red-600 text-center">
+              <p className="font-medium">Error loading animals</p>
+              <p className="text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {!loading && !error && (
+        <table className="w-full min-w-[800px]">
+          <thead className="bg-green-50/80 backdrop-blur-sm border-b border-green-200">
+            <tr>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                <div className="flex items-center">
+                  Terakhir Diperbarui
+                  <SortButton field="terakhir_diperbarui" />
+                </div>
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                <div className="flex items-center">
+                  Nama Pemilik
+                  <SortButton field="nama_pemilik" />
+                </div>
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Lokasi
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Jenis Hewan
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Jenis Kelamin
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Rentang Usia
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Riwayat Penyakit
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Riwayat Vaksin
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-right font-medium text-green-700 whitespace-nowrap">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white/50 backdrop-blur-sm divide-y divide-green-100">
+            {(!sortedAnimals || sortedAnimals.length === 0) ? (
+              <tr>
+                <td colSpan={9} className="px-6 py-12 text-center text-gray-600">
+                  <div className="flex flex-col items-center space-y-3">
+                    <Heart className="w-12 h-12 text-gray-400" />
+                    Tidak ada data hewan
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              sortedAnimals.map((animal) => (
+                <tr 
+                  key={animal.id} 
+                  className="hover:bg-green-50/50 cursor-pointer transition-colors duration-200 group"
+                  onClick={() => onAnimalClick(animal)}
+                >
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900 group-hover:text-green-800 transition-colors duration-200">
+                      {new Date(animal.terakhir_diperbarui).toLocaleDateString('id-ID')}
+                    </div>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{animal.nama_pemilik}</div>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {animal.lokasi}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{animal.jenis_hewan}</div>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      animal.jenis_kelamin === 'Jantan' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
+                    }`}>
+                      {animal.jenis_kelamin}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{animal.rentang_usia}</div>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      animal.riwayat_penyakit === 'Pernah' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {animal.riwayat_penyakit}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      animal.riwayat_vaksin === 'Pernah' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {animal.riwayat_vaksin}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button className="text-gray-400 hover:text-green-600 transition-colors duration-200">
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+        )}
+      </div>
+    </div>
+  );
+}
