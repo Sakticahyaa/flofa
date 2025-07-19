@@ -51,7 +51,7 @@ export default function AnimalFilter({ filters, onFilterChange }: AnimalFilterPr
       </button>
       
       {dropdownOpen[filterType as keyof typeof dropdownOpen] && (
-        <div className="absolute z-20 mt-1 w-full bg-white/95 backdrop-blur-md border border-green-300 rounded-lg shadow-xl">
+        <div className="absolute z-30 mt-1 w-full bg-white/95 backdrop-blur-md border border-green-300 rounded-lg shadow-xl">
           <div className="py-1">
             <button
               onClick={() => handleFilterChange(filterType, '')}

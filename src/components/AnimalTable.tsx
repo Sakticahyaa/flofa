@@ -50,7 +50,7 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
   );
 
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-green-200/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+    <div className="relative z-10 bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-green-200/50 overflow-hidden hover:shadow-xl transition-all duration-300">
       <div className="overflow-x-auto">
         {loading && (
           <div className="flex items-center justify-center py-12">
@@ -69,8 +69,8 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
         )}
         
         {!loading && !error && (
-        <table className="w-full min-w-[800px]">
-          <thead className="bg-green-50/80 backdrop-blur-sm border-b border-green-200">
+        <table className="w-full min-w-[800px] z-10">
+          <thead className="bg-green-50/80 backdrop-blur-sm border-b border-green-200 z-10">
             <tr>
               <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
                 <div className="flex items-center">

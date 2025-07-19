@@ -77,7 +77,7 @@ export default function AnimalListPage() {
         
         {/* Search and Filter Controls */}
         <div className='flex flex-col lg:flex-row gap-4 lg:gap-10 justify-between items-stretch lg:items-center mb-6'>
-          <div className='flex-1 order-2 lg:order-1'>
+          <div className='flex-1 order-2 lg:order-1 z-30'>
             <AnimalFilter filters={filters} onFilterChange={handleFilterChange} />
           </div>
           
