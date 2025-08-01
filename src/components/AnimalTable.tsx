@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreVertical, Heart } from 'lucide-react';
+import { ChevronUp, ChevronDown, MoreVertical, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Animal } from '../types/Animal';
 
 interface AnimalTableProps {
@@ -11,6 +11,8 @@ interface AnimalTableProps {
 
 export default function AnimalTable({ animals, loading, error, onAnimalClick }: AnimalTableProps) {
   const [sortOrder, setSortOrder] = useState({ field: '', direction: 'asc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const sortedAnimals = React.useMemo(() => {
     if (!sortOrder.field || !animals) return animals;
@@ -30,9 +32,60 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
     });
   }, [animals, sortOrder]);
 
+  // Pagination logic
+  const totalItems = sortedAnimals?.length || 0;
+  const totalPages = pageSize === -1 ? 1 : Math.ceil(totalItems / pageSize);
+  
+  const paginatedAnimals = React.useMemo(() => {
+    if (!sortedAnimals) return [];
+    if (pageSize === -1) return sortedAnimals; // Show all
+    
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sortedAnimals.slice(startIndex, endIndex);
+  }, [sortedAnimals, currentPage, pageSize]);
+
+  // Reset to first page when page size changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize]);
+
   const handleSort = (field: string) => {
     const newDirection = sortOrder.field === field && sortOrder.direction === 'asc' ? 'desc' : 'asc';
     setSortOrder({ field, direction: newDirection });
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const halfVisible = Math.floor(maxVisiblePages / 2);
+      let startPage = Math.max(1, currentPage - halfVisible);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   };
 
   const SortButton = ({ field }: { field: string }) => (
@@ -51,6 +104,34 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
 
   return (
     <div className="relative z-10 bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-green-200/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+      {/* Page Size Selector */}
+      <div className="p-4 bg-green-50/80 backdrop-blur-sm border-b border-green-200 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-green-700">Tampilkan:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="px-3 py-1 text-sm border border-green-300 rounded-md bg-white/90 text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={-1}>Semua</option>
+          </select>
+          <span className="text-sm text-green-600">data per halaman</span>
+        </div>
+        
+        {totalItems > 0 && (
+          <div className="text-sm text-green-600">
+            {pageSize === -1 ? (
+              `Menampilkan semua ${totalItems} data`
+            ) : (
+              `Menampilkan ${Math.min((currentPage - 1) * pageSize + 1, totalItems)}-${Math.min(currentPage * pageSize, totalItems)} dari ${totalItems} data`
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="overflow-x-auto">
         {loading && (
           <div className="flex items-center justify-center py-12">
@@ -108,7 +189,7 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
             </tr>
           </thead>
           <tbody className="bg-white/50 backdrop-blur-sm divide-y divide-green-100">
-            {(!sortedAnimals || sortedAnimals.length === 0) ? (
+            {(!paginatedAnimals || paginatedAnimals.length === 0) ? (
               <tr>
                 <td colSpan={9} className="px-6 py-12 text-center text-gray-600">
                   <div className="flex flex-col items-center space-y-3">
@@ -118,7 +199,7 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
                 </td>
               </tr>
             ) : (
-              sortedAnimals.map((animal) => (
+              paginatedAnimals.map((animal) => (
                 <tr 
                   key={animal.id} 
                   className="hover:bg-green-50/50 cursor-pointer transition-colors duration-200 group"
@@ -152,16 +233,16 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
                   </td>
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      animal.riwayat_penyakit === 'Pernah' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      animal.riwayat_penyakit && animal.riwayat_penyakit.trim() !== '' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'
                     }`}>
-                      {animal.riwayat_penyakit}
+                      {animal.riwayat_penyakit && animal.riwayat_penyakit.trim() !== '-' ? 'Pernah' : '-'}
                     </span>
                   </td>
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      animal.riwayat_vaksin === 'Pernah' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      animal.riwayat_vaksin && animal.riwayat_vaksin.trim() !== '' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
                     }`}>
-                      {animal.riwayat_vaksin}
+                      {animal.riwayat_vaksin && animal.riwayat_vaksin.trim() !== '-' ? 'Pernah' : '-'}
                     </span>
                   </td>
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -176,6 +257,47 @@ export default function AnimalTable({ animals, loading, error, onAnimalClick }: 
         </table>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && !error && totalItems > 0 && pageSize !== -1 && totalPages > 1 && (
+        <div className="px-4 py-3 bg-green-50/80 backdrop-blur-sm border-t border-green-200 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm border border-green-300 rounded-md bg-white/90 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Sebelumnya</span>
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              {getPageNumbers().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 text-sm border rounded-md transition-colors duration-200 ${
+                    currentPage === page
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white/90 text-green-700 border-green-300 hover:bg-green-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm border border-green-300 rounded-md bg-white/90 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-1"
+            >
+              <span>Selanjutnya</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
