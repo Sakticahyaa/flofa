@@ -126,7 +126,7 @@ export default function LandingPage() {
               transform: `translate(${mousePosition.x * 0.02}px, ${
                 mousePosition.y * 0.02
               }px)`,
-            }}
+            }} 
           ></div>
           <div
             className="absolute top-40 right-20 w-16 h-16 bg-green-300 rounded-full opacity-40"
