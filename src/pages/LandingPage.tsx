@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useDataCount } from "../hooks/useDataCount";
 import { Instagram } from "lucide-react";
+import heroImage from "../assets/img/hero_flofa.png";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -98,16 +99,23 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"
+        <div 
+          className="absolute inset-0"
           style={{
             transform: `translateY(${scrollY * 0.5}px)`,
-            backgroundImage: `url('https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundAttachment: "fixed",
           }}
         >
+          <img 
+            src={heroImage}
+            alt="Hero background" 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              console.log('Image failed to load:', e);
+              // Fallback to a placeholder
+              e.currentTarget.src = 'https://via.placeholder.com/1920x1080/22c55e/ffffff?text=Flofa+Hero';
+            }}
+            onLoad={() => console.log('Hero image loaded successfully!')}
+          />
           <div className="absolute inset-0 bg-black/60"></div>
         </div>
 
@@ -248,7 +256,7 @@ export default function LandingPage() {
                 Platform digital untuk memetakan dan mendata koleksi buku pada
                 Taman Baca Masyarakat di Kelurahan Bugel, Kecamatan Sidorejo,
                 Kota Salatiga. Platform ini juga berfungsi dalam membantu
-                masyarakat menemukan buku dan lokasi TBM terdekat.
+                masyarakat menemukan buku dan lokasi TBM terdekat.
               </p>
             </div>
 
