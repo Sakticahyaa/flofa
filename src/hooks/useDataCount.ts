@@ -4,7 +4,7 @@ import { plantService } from '../services/plantService'
 
 export const useDataCount = () => {
   const [animalCount, setAnimalCount] = useState(62) // Default fallback
-  const [plantCount, setPlantCount] = useState(78) // Default fallback
+  const [plantCount, setPlantCount] = useState(11) // Updated default based on new data
   const [loading, setLoading] = useState(true)
 
   const fetchCounts = async () => {

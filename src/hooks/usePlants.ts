@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react'
 import { plantService } from '../services/plantService'
+import { Plant } from '../types/Plant'
 
-export const usePlants = (filters = {}, searchTerm = '') => {
-  const [plants, setPlants] = useState([])
+export const usePlants = (filters: { jenis_tanaman?: string } = {}, searchTerm = '') => {
+  const [plants, setPlants] = useState<Plant[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchPlants = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      let data = []
+      let data: Plant[] = []
 
       if (searchTerm || filters.jenis_tanaman) {
         data = await plantService.searchPlants(searchTerm, filters)
@@ -21,7 +22,7 @@ export const usePlants = (filters = {}, searchTerm = '') => {
 
       setPlants(data)
     } catch (err) {
-      setError(err.message)
+      setError((err as Error).message || 'Failed to fetch plants')
       console.error('Error in usePlants:', err)
     } finally {
       setLoading(false)

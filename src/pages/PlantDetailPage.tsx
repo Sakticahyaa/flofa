@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Leaf, Calendar, Bug, AlertTriangle, Shield } from 'lucide-react';
+import { ArrowLeft, Leaf, Calendar, Bug, AlertTriangle, Beaker } from 'lucide-react';
 import Searchbar from '../components/Searchbar';
 import { plantService } from '../services/plantService';
-import { Plant } from '../types/Plant';
+import { Plant, PestInfo, DiseaseInfo } from '../types/Plant';
 
 export default function PlantDetailPage() {
   const { plantId } = useParams();
@@ -50,10 +50,6 @@ export default function PlantDetailPage() {
 
   const handleBackToLanding = () => {
     navigate('/');
-  };
-
-  const parseItems = (items: string) => {
-    return items.split(',').map(item => item.trim()).filter(item => item);
   };
 
   if (loading) {
@@ -105,6 +101,52 @@ export default function PlantDetailPage() {
     );
   }
 
+  const PestCard = ({ pest, index }: { pest: PestInfo; index: number }) => (
+    <div key={index} className="bg-red-50/70 rounded-lg p-4 border border-red-200/50">
+      <h4 className="font-semibold text-red-800 mb-3 flex items-center">
+        <Bug className="w-4 h-4 mr-2" />
+        {pest.nama}
+      </h4>
+      <div className="space-y-3 text-sm">
+        <div>
+          <span className="font-medium text-red-700">Penyebab:</span>
+          <p className="text-gray-700 mt-1">{pest.penyebab}</p>
+        </div>
+        <div>
+          <span className="font-medium text-red-700">Gejala:</span>
+          <p className="text-gray-700 mt-1">{pest.gejala}</p>
+        </div>
+        <div>
+          <span className="font-medium text-red-700">Pengendalian:</span>
+          <p className="text-gray-700 mt-1">{pest.pengendalian}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const DiseaseCard = ({ disease, index }: { disease: DiseaseInfo; index: number }) => (
+    <div key={index} className="bg-orange-50/70 rounded-lg p-4 border border-orange-200/50">
+      <h4 className="font-semibold text-orange-800 mb-3 flex items-center">
+        <AlertTriangle className="w-4 h-4 mr-2" />
+        {disease.nama}
+      </h4>
+      <div className="space-y-3 text-sm">
+        <div>
+          <span className="font-medium text-orange-700">Penyebab:</span>
+          <p className="text-gray-700 mt-1">{disease.penyebab}</p>
+        </div>
+        <div>
+          <span className="font-medium text-orange-700">Gejala:</span>
+          <p className="text-gray-700 mt-1">{disease.gejala}</p>
+        </div>
+        <div>
+          <span className="font-medium text-orange-700">Pengendalian:</span>
+          <p className="text-gray-700 mt-1">{disease.pengendalian}</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -150,14 +192,19 @@ export default function PlantDetailPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-green-800 mb-2">Detail Tanaman</h1>
           </div>
 
-          {/* Plant Name */}
+          {/* Plant Name and Basic Info */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 leading-tight">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 leading-tight">
               {plant.nama_tanaman}
             </h2>
+            {plant.nama_latin && (
+              <p className="text-lg italic text-gray-600 mb-4">
+                {plant.nama_latin}
+              </p>
+            )}
           </div>
 
-          {/* Plant Basic Info */}
+          {/* Plant Basic Info Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
             {/* Left Column */}
             <div className="space-y-4 sm:space-y-6">
@@ -185,6 +232,17 @@ export default function PlantDetailPage() {
                 </h3>
                 <p className="text-sm sm:text-base text-gray-700 ml-6 sm:ml-7">{plant.nama_tanaman}</p>
               </div>
+
+              {/* Latin Name */}
+              {plant.nama_latin && (
+                <div>
+                  <h3 className="text-base sm:text-lg font-semibold text-green-800 mb-2 flex items-center">
+                    <Beaker className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-600" />
+                    Nama Latin
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-700 italic ml-6 sm:ml-7">{plant.nama_latin}</p>
+                </div>
+              )}
             </div>
 
             {/* Right Column */}
@@ -205,68 +263,67 @@ export default function PlantDetailPage() {
                   </span>
                 </p>
               </div>
+
+              {/* Statistics */}
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-green-800 mb-3">Statistik</h3>
+                <div className="space-y-2 ml-6 sm:ml-7">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Jumlah Hama:</span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      {plantService.getPestCount(plant)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Jumlah Penyakit:</span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      {plantService.getDiseaseCount(plant)}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Pest and Disease Information */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          <div className="space-y-8">
             {/* Pest Information */}
-            <div className="bg-red-50/50 rounded-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-red-800 mb-4 flex items-center">
-                <Bug className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-red-600" />
-                Informasi Hama
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-red-700 mb-2">Potensi Hama:</h4>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    {parseItems(plant.potensi_hama).map((hama, index) => (
-                      <li key={index}>{hama}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-red-700 mb-2">Gejala:</h4>
-                  <p className="text-sm text-gray-700">{plant.gejala_hama}</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-red-700 mb-2">Pengendalian:</h4>
-                  <p className="text-sm text-gray-700">{plant.pengendalian_hama}</p>
+            {plant.hama && plant.hama.length > 0 && (
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold text-red-800 mb-4 flex items-center">
+                  <Bug className="w-5 h-5 mr-2 text-red-600" />
+                  Informasi Hama ({plant.hama.length})
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {plant.hama.map((pest, index) => (
+                    <PestCard key={index} pest={pest} index={index} />
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Disease Information */}
-            <div className="bg-orange-50/50 rounded-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-orange-800 mb-4 flex items-center">
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-orange-600" />
-                Informasi Penyakit
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-orange-700 mb-2">Potensi Penyakit:</h4>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    {parseItems(plant.potensi_penyakit).map((penyakit, index) => (
-                      <li key={index}>{penyakit}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-orange-700 mb-2">Gejala:</h4>
-                  <p className="text-sm text-gray-700">{plant.gejala_penyakit}</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-orange-700 mb-2">Pengendalian:</h4>
-                  <p className="text-sm text-gray-700">{plant.pengendalian_penyakit}</p>
+            {plant.penyakit && plant.penyakit.length > 0 && (
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold text-orange-800 mb-4 flex items-center">
+                  <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
+                  Informasi Penyakit ({plant.penyakit.length})
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {plant.penyakit.map((disease, index) => (
+                    <DiseaseCard key={index} disease={disease} index={index} />
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* No data message */}
+            {(!plant.hama || plant.hama.length === 0) && (!plant.penyakit || plant.penyakit.length === 0) && (
+              <div className="text-center py-8">
+                <Leaf className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600">Belum ada informasi hama dan penyakit untuk tanaman ini.</p>
+              </div>
+            )}
           </div>
         </div>
       </main>

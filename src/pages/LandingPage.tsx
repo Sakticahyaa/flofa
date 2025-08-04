@@ -253,10 +253,13 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-amber-700 leading-relaxed">
-                Platform digital untuk memetakan dan mendata koleksi buku pada
-                Taman Baca Masyarakat di Kelurahan Bugel, Kecamatan Sidorejo,
-                Kota Salatiga. Platform ini juga berfungsi dalam membantu
-                masyarakat menemukan buku dan lokasi TBM terdekat.
+                Flofa adalah platform pendataan penyakit pada hewan dan tanaman
+                di Kelurahan Bugel, Kecamatan Sidorejo, Kota Salatiga. Selain
+                pendataan penyakit, Flofa juga memberikan informasi lain seperti
+                gejala dan cara penanganannya. Flofa membantu digitalisasi
+                proses pendataan dengan mudah dan cepat. Selain sebagai
+                pendataan, Flofa juga berperan sebagai pemantauan kondisi hewan
+                dan tanaman di Kelurahan Bugel.
               </p>
             </div>
 

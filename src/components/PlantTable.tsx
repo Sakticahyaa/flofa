@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreVertical, Leaf } from 'lucide-react';
+import { ChevronUp, ChevronDown, MoreVertical, Leaf, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Plant } from '../types/Plant';
+import { plantService } from '../services/plantService';
 
 interface PlantTableProps {
   plants: Plant[];
@@ -11,6 +12,8 @@ interface PlantTableProps {
 
 export default function PlantTable({ plants, loading, error, onPlantClick }: PlantTableProps) {
   const [sortOrder, setSortOrder] = useState({ field: '', direction: 'asc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const sortedPlants = React.useMemo(() => {
     if (!sortOrder.field || !plants) return plants;
@@ -30,9 +33,60 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
     });
   }, [plants, sortOrder]);
 
+  // Pagination logic
+  const totalItems = sortedPlants?.length || 0;
+  const totalPages = pageSize === -1 ? 1 : Math.ceil(totalItems / pageSize);
+  
+  const paginatedPlants = React.useMemo(() => {
+    if (!sortedPlants) return [];
+    if (pageSize === -1) return sortedPlants; // Show all
+    
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sortedPlants.slice(startIndex, endIndex);
+  }, [sortedPlants, currentPage, pageSize]);
+
+  // Reset to first page when page size changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize]);
+
   const handleSort = (field: string) => {
     const newDirection = sortOrder.field === field && sortOrder.direction === 'asc' ? 'desc' : 'asc';
     setSortOrder({ field, direction: newDirection });
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const halfVisible = Math.floor(maxVisiblePages / 2);
+      let startPage = Math.max(1, currentPage - halfVisible);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   };
 
   const SortButton = ({ field }: { field: string }) => (
@@ -49,12 +103,36 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
     </button>
   );
 
-  const countItems = (items: string) => {
-    return items.split(',').filter(item => item.trim()).length;
-  };
-
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-green-200/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+    <div className="relative z-10 bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-green-200/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+      {/* Page Size Selector */}
+      <div className="p-4 bg-green-50/80 backdrop-blur-sm border-b border-green-200 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-green-700">Tampilkan:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="px-3 py-1 text-sm border border-green-300 rounded-md bg-white/90 text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={-1}>Semua</option>
+          </select>
+          <span className="text-sm text-green-600">data per halaman</span>
+        </div>
+        
+        {totalItems > 0 && (
+          <div className="text-sm text-green-600">
+            {pageSize === -1 ? (
+              `Menampilkan semua ${totalItems} data`
+            ) : (
+              `Menampilkan ${Math.min((currentPage - 1) * pageSize + 1, totalItems)}-${Math.min(currentPage * pageSize, totalItems)} dari ${totalItems} data`
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="overflow-x-auto">
         {loading && (
           <div className="flex items-center justify-center py-12">
@@ -73,8 +151,8 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
         )}
         
         {!loading && !error && (
-        <table className="w-full min-w-[600px]">
-          <thead className="bg-green-50/80 backdrop-blur-sm border-b border-green-200">
+        <table className="w-full min-w-[800px] z-10">
+          <thead className="bg-green-50/80 backdrop-blur-sm border-b border-green-200 z-10">
             <tr>
               <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
                 <div className="flex items-center">
@@ -89,13 +167,16 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
                 </div>
               </th>
               <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
+                Nama Latin
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
                 Komoditas
               </th>
               <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
-                Jumlah Potensi Hama
+                Jumlah Hama
               </th>
               <th className="px-3 sm:px-6 py-3 text-left font-medium text-green-700 whitespace-nowrap">
-                Jumlah Potensi Penyakit
+                Jumlah Penyakit
               </th>
               <th className="px-3 sm:px-6 py-3 text-right font-medium text-green-700 whitespace-nowrap">
                 Actions
@@ -103,9 +184,9 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
             </tr>
           </thead>
           <tbody className="bg-white/50 backdrop-blur-sm divide-y divide-green-100">
-            {(!sortedPlants || sortedPlants.length === 0) ? (
+            {(!paginatedPlants || paginatedPlants.length === 0) ? (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-600">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-600">
                   <div className="flex flex-col items-center space-y-3">
                     <Leaf className="w-12 h-12 text-gray-400" />
                     Tidak ada data tanaman
@@ -113,7 +194,7 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
                 </td>
               </tr>
             ) : (
-              sortedPlants.map((plant) => (
+              paginatedPlants.map((plant) => (
                 <tr 
                   key={plant.id} 
                   className="hover:bg-green-50/50 cursor-pointer transition-colors duration-200 group"
@@ -125,7 +206,12 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
                     </div>
                   </td>
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{plant.nama_tanaman}</div>
+                    <div className="text-sm text-gray-900 font-medium">{plant.nama_tanaman}</div>
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-600 italic">
+                      {plant.nama_latin || '-'}
+                    </div>
                   </td>
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -137,14 +223,14 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        {countItems(plant.potensi_hama)}
+                        {plantService.getPestCount(plant)}
                       </span>
                     </div>
                   </td>
                   <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        {countItems(plant.potensi_penyakit)}
+                        {plantService.getDiseaseCount(plant)}
                       </span>
                     </div>
                   </td>
@@ -160,6 +246,47 @@ export default function PlantTable({ plants, loading, error, onPlantClick }: Pla
         </table>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && !error && totalItems > 0 && pageSize !== -1 && totalPages > 1 && (
+        <div className="px-4 py-3 bg-green-50/80 backdrop-blur-sm border-t border-green-200 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm border border-green-300 rounded-md bg-white/90 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Sebelumnya</span>
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              {getPageNumbers().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 text-sm border rounded-md transition-colors duration-200 ${
+                    currentPage === page
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white/90 text-green-700 border-green-300 hover:bg-green-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm border border-green-300 rounded-md bg-white/90 text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-1"
+            >
+              <span>Selanjutnya</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,12 +1,25 @@
+export interface PestInfo {
+  nama: string;
+  penyebab: string;
+  gejala: string;
+  pengendalian: string;
+}
+
+export interface DiseaseInfo {
+  nama: string;
+  penyebab: string;
+  gejala: string;
+  pengendalian: string;
+}
+
 export interface Plant {
-  id: number;
+  id: string;
   terakhir_diperbarui: string;
   nama_tanaman: string;
+  nama_latin?: string;
   jenis_tanaman: 'Pangan' | 'Hortikultura';
-  potensi_hama: string;
-  gejala_hama: string;
-  pengendalian_hama: string;
-  potensi_penyakit: string;
-  gejala_penyakit: string;
-  pengendalian_penyakit: string;
+  hama: PestInfo[];
+  penyakit: DiseaseInfo[];
+  created_at?: string;
+  updated_at?: string;
 }
